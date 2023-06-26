@@ -1,6 +1,6 @@
 # nsfw-detect-onnx
 
-convert HDF5model from [https://github.com/GantMan/nsfw_model](https://github.com/GantMan/nsfw_model) to onnx via [https://github.com/onnx/tensorflow-onnx](https://github.com/onnx/tensorflow-onnx).
+convert HDF5 model by [https://github.com/GantMan/nsfw_model](https://github.com/GantMan/nsfw_model) to onnx via [https://github.com/onnx/tensorflow-onnx](https://github.com/onnx/tensorflow-onnx).
 
 ## Model Download
 
