@@ -8,7 +8,63 @@ see [releases](https://github.com/iola1999/nsfw-detect-onnx/releases).
 
 ## Demo
 
-### python
+### Node.js
+
+```js
+const ort = require("onnxruntime-node");
+const sharp = require("sharp");
+
+async function loadImageAndResize(imagePath) {
+  const image = await sharp(imagePath).resize(299, 299).raw().toBuffer();
+
+  const normalizedImage = new Float32Array(1 * 299 * 299 * 3);
+  for (let i = 0; i < image.length; i++) {
+    normalizedImage[i] = image[i] / 255.0;
+  }
+
+  const inputTensor = normalizedImage;
+
+  return inputTensor;
+}
+
+async function runModel(imagePath, modelPath) {
+  const inputTensor = await loadImageAndResize(imagePath);
+
+  const session = await ort.InferenceSession.create(modelPath);
+
+  const inputName = session.inputNames[0];
+
+  const options = {
+    [inputName]: new ort.Tensor("float32", inputTensor, [1, 299, 299, 3]),
+  };
+  const feeds = {};
+  feeds[inputName] = options[inputName];
+
+  const results = await session.run(feeds);
+
+  const outputName = session.outputNames[0];
+  const output = results[outputName];
+  const categories = ["drawings", "hentai", "neutral", "porn", "sexy"];
+  const sortedIndices = output.data
+    .map((value, index) => index)
+    .sort((a, b) => output.data[b] - output.data[a]);
+  const imagePreds = {};
+
+  imagePreds[imagePath] = {};
+  for (const index of sortedIndices) {
+    imagePreds[imagePath][categories[index]] = output.data[index].toString();
+  }
+
+  console.log(JSON.stringify(imagePreds, null, 2));
+}
+
+const imagePath = "./images/mnzl.jpg";
+const modelPath = "./model.onnx";
+
+runModel(imagePath, modelPath);
+```
+
+### Python
 
 ```py
 import numpy as np
@@ -47,6 +103,7 @@ for _ in range(len(sorted_indices[0])):
 
 import json
 print(json.dumps(image_preds, sort_keys=True, indent=2))
+# note that the sort is incorrect
 ```
 
 ## Acknowledgements
