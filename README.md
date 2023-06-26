@@ -28,19 +28,27 @@ async function loadImageAndResize(imagePath) {
 }
 
 async function runModel(imagePath, modelPath) {
+  const startTime = new Date().getTime();
   const inputTensor = await loadImageAndResize(imagePath);
-
+  const loadImgTime = new Date().getTime();
+  console.log(`Load image time: ${loadImgTime - startTime} ms`);
   const session = await ort.InferenceSession.create(modelPath);
+  const modelLoadTime = new Date().getTime();
+  console.log(`Load model time: ${modelLoadTime - loadImgTime} ms`);
 
   const inputName = session.inputNames[0];
 
   const options = {
     [inputName]: new ort.Tensor("float32", inputTensor, [1, 299, 299, 3]),
   };
+  const makeTensorTime = new Date().getTime();
+  console.log(`Make tensor time: ${makeTensorTime - modelLoadTime} ms`);
   const feeds = {};
   feeds[inputName] = options[inputName];
 
   const results = await session.run(feeds);
+  const runModelTime = new Date().getTime();
+  console.log(`Run model time: ${runModelTime - makeTensorTime} ms`);
 
   const outputName = session.outputNames[0];
   const output = results[outputName];
@@ -62,6 +70,23 @@ const imagePath = "./images/mnzl.jpg";
 const modelPath = "./model.onnx";
 
 runModel(imagePath, modelPath);
+```
+
+Output:
+```plaintext
+Load image time: 52 ms
+Load model time: 369 ms
+Make tensor time: 1 ms
+Run model time: 94 ms
+{
+  "../images/mnzl.jpg": {
+    "hentai": "0.6869526505470276",
+    "drawings": "0.2912766933441162",
+    "porn": "0.01450809370726347",
+    "sexy": "0.00663922680541873",
+    "neutral": "0.0006233601598069072"
+  }
+}
 ```
 
 ### Python
