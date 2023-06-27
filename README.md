@@ -22,14 +22,12 @@ async function loadImageAndResize(imagePath) {
     normalizedImage[i] = image[i] / 255.0;
   }
 
-  const inputTensor = normalizedImage;
-
-  return inputTensor;
+  return normalizedImage;
 }
 
 async function runModel(imagePath, modelPath) {
   const startTime = new Date().getTime();
-  const inputTensor = await loadImageAndResize(imagePath);
+  const normalizedImage = await loadImageAndResize(imagePath);
   const loadImgTime = new Date().getTime();
   console.log(`Load image time: ${loadImgTime - startTime} ms`);
   const session = await ort.InferenceSession.create(modelPath);
@@ -39,7 +37,7 @@ async function runModel(imagePath, modelPath) {
   const inputName = session.inputNames[0];
 
   const options = {
-    [inputName]: new ort.Tensor("float32", inputTensor, [1, 299, 299, 3]),
+    [inputName]: new ort.Tensor("float32", normalizedImage, [1, 299, 299, 3]),
   };
   const makeTensorTime = new Date().getTime();
   console.log(`Make tensor time: ${makeTensorTime - modelLoadTime} ms`);
